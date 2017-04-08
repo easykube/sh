@@ -7,15 +7,16 @@ import "testing"
 
 func Test_WinRM(t *testing.T) {
 	s := NewWinRmSession()
-	config := NewSessionConfig()
+	config := NewConfig()
 	config.Host = "192.168.0.239"
+	config.UseWinRm = true
 	config.User = "administrator"
-	config.Password = "ljlkkk"
-
-	err := s.Open(config)
+	config.Password = "xxxxxx"
+	s.Init(config)
+	err := s.Open()
 	if err != nil {
 		panic(err)
 	}
-	err = s.Run("ipconfig /all")
-	println(err)
+	s.Run("ipconfig /all")
+
 }

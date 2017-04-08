@@ -9,6 +9,7 @@ import (
 )
 
 type SshSession struct {
+	name       string
 	host       string
 	port       int
 	user       string
@@ -22,14 +23,41 @@ func NewSSHSession() *SshSession {
 	return &SshSession{}
 }
 
-func (this *SshSession) Open(conf *SessionConfig) error {
+//初始化设置
+func (this *SshSession) Init(conf *Config) {
+	this.Close()
+	this.name = conf.Name
 	this.host = conf.Host
-	this.user = conf.User
-	this.password = conf.Password
 	this.port = 22
 	if conf.Port > 0 {
 		this.port = conf.Port
 	}
+
+	this.user = conf.User
+	this.password = conf.Password
+
+}
+
+//获取配置
+func (this *SshSession) Conf() *Config {
+	conf := NewConfig()
+	conf.UseWinRm = false
+	conf.Name = this.name
+	conf.Host = this.host
+	conf.Port = this.port
+	conf.User = this.user
+	conf.Password = this.password
+	conf.IsLocal = false
+	return conf
+
+}
+
+//是否本地会话
+func (this *SshSession) IsLocal() bool {
+	return false
+}
+
+func (this *SshSession) Open() error {
 
 	addr := fmt.Sprintf("%s:%d", this.host, this.port)
 	cfg := &ssh.ClientConfig{

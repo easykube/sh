@@ -4,11 +4,13 @@ import "testing"
 
 func Test_SSH(t *testing.T) {
 	var s = NewSSHSession()
-	config := NewSessionConfig()
+	config := NewConfig()
 	config.Host = "192.168.0.236"
 	config.User = "user"
-	config.Password = "ljlkkk"
-	err := s.Open(config)
+	config.Password = "xxxxxx"
+	config.UseWinRm = false
+	s.Init(config)
+	err := s.Open()
 	if err != nil {
 		t.Error(err)
 	}

@@ -2,13 +2,20 @@ package remote
 
 /**
 服务端配置，设置为认证方式为Basic,不用加密传输，这时可以直接使用用户名和密码登录，传输为明文
-
+    在cmd中
     winrm quickconfig
     y
     winrm set winrm/config/service/Auth '@{Basic="true"}'
     winrm set winrm/config/service '@{AllowUnencrypted="true"}'
     winrm set winrm/config/winrs '@{MaxMemoryPerShellMB="1024"}'
 
+    在Powershell中
+	设置
+	Set-Item -Path "WSMan:\localhost\Service\Auth\Basic" -Value $true
+	Set-Item -Path "WSMan:\localhost\Service\AllowUnencrypted" -Value $true
+　　 查看
+	Get-ChildItem WSMan:\localhost\Service\Auth | Where {$_.Name -eq "Basic"}
+	Get-ChildItem WSMan:\localhost\Service | Where {$_.Name -eq "AllowUnencrypted"}
 **/
 
 import (
@@ -25,6 +32,7 @@ import (
 )
 
 type WimRmSession struct {
+	name     string
 	host     string
 	user     string
 	password string
@@ -64,20 +72,48 @@ func NewWinRmSession() *WimRmSession {
 	return &WimRmSession{}
 }
 
+//初始化设置
+func (this *WimRmSession) Init(conf *Config) {
+	this.Close()
+	this.name = conf.Name
+	this.host = conf.Host
+	this.port = 5985
+	if conf.Port > 0 {
+		this.port = conf.Port
+	}
+
+	this.user = conf.User
+	this.password = conf.Password
+
+}
+
+//获取配置
+func (this *WimRmSession) Conf() *Config {
+	conf := NewConfig()
+	conf.UseWinRm = true
+	conf.Name = this.name
+	conf.Host = this.host
+	conf.Port = this.port
+	conf.User = this.user
+	conf.Password = this.password
+	conf.IsLocal = false
+	return conf
+
+}
+
+//是否本地会话
+func (this *WimRmSession) IsLocal() bool {
+	return false
+
+}
+
 func (this *WimRmSession) initwincp() {
 	if this.winrmcp == nil {
 		this.winrmcp = winrmcp.NewWinrmcp2(this.client, this.config)
 	}
 }
 
-func (this *WimRmSession) Open(config *SessionConfig) error {
-	this.host = config.Host
-	this.user = config.User
-	this.password = config.Password
-	this.port = 5985
-	if config.Port > 0 {
-		this.port = config.Port
-	}
+func (this *WimRmSession) Open() error {
 
 	this.config = &winrmcp.Config{}
 	this.config.Auth.Password = this.password
